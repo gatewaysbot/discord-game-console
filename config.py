@@ -1,68 +1,85 @@
 """
-Configuration file for the Discord bot.
+Configuration file for the Discord Game Console Bot.
+All game settings and constants are defined here.
 """
 import os
+from dotenv import load_dotenv
 
-# Bot configuration
-TOKEN = os.getenv("DISCORD_BOT_TOKEN", "")  # Discord bot token
-PREFIX = "!"  # Command prefix
+# Load environment variables from .env file
+load_dotenv()
 
-# Game settings
-GUESS_MIN = 1
-GUESS_MAX = 100
-GUESS_ATTEMPTS = 5
-GUESS_POINTS = 100
-GUESS_MULTIPLIER = 1.5  # Multiplier for consecutive wins
+# Core Bot Settings
+class BotConfig:
+    TOKEN = os.getenv("DISCORD_TOKEN", "")  # Default to empty string if not found
+    if not TOKEN:
+        raise ValueError("DISCORD_TOKEN environment variable is not set")
+    PREFIX = "!"
+    DEFAULT_POINTS = 1000
+    LEADERBOARD_SIZE = 10
 
-TRIVIA_TIMEOUT = 20  # Seconds to answer trivia questions
-TRIVIA_POINTS = 50
-TRIVIA_MULTIPLIER = 1.2  # Multiplier for consecutive right answers
+# Game Settings
+class GameSettings:
+    class Daily:
+        MIN_BONUS = 100
+        MAX_BONUS = 500
+        COOLDOWN_HOURS = 24
 
-COINFLIP_POINTS = 25
-COINFLIP_MULTIPLIER = 2  # Double or nothing
+    class NumberGuess:
+        MIN_NUMBER = 1
+        MAX_NUMBER = 100
+        MAX_ATTEMPTS = 5
+        BASE_POINTS = 100
+        MAX_MULTIPLIER = 2.0
+        MULTIPLIER_INCREMENT = 0.1
 
-# Slots settings
-SLOTS_MIN_BET = 10
-SLOTS_MAX_BET = 1000
-SLOTS_SYMBOLS = ["🍒", "🍋", "💎", "7️⃣", "🔔", "🎰", "⭐"]
-SLOTS_PAYOUTS = {
-    "🍒": 2,     # Two cherries pays 2x
-    "🍋": 3,     # Three lemons pays 3x
-    "💎": 10,    # Three diamonds pays 10x
-    "7️⃣": 7,     # Three sevens pays 7x
-    "🔔": 5,     # Three bells pays 5x
-    "🎰": 15,    # Three bars pays 15x
-    "⭐": 4      # Three stars pays 4x
-}
-SLOTS_JACKPOT = 100  # Jackpot multiplier for 3 diamonds
+    class Trivia:
+        TIMEOUT_SECONDS = 20
+        BASE_POINTS = 50
+        MAX_MULTIPLIER = 1.5
+        MULTIPLIER_INCREMENT = 0.05
 
-# Roulette settings
-ROULETTE_MIN_BET = 10
-ROULETTE_MAX_BET = 1000
-ROULETTE_TIMEOUT = 15  # Seconds to place bets
-ROULETTE_PAYOUTS = {
-    "number": 35,     # Single number pays 35:1
-    "red": 1,         # Red pays 1:1
-    "black": 1,       # Black pays 1:1
-    "even": 1,        # Even pays 1:1
-    "odd": 1,         # Odd pays 1:1
-    "low": 1,         # 1-18 pays 1:1
-    "high": 1,        # 19-36 pays 1:1
-    "dozen": 2,       # Dozen (1-12, 13-24, 25-36) pays 2:1
-    "column": 2       # Column pays 2:1
-}
+    class Slots:
+        MIN_BET = 10
+        MAX_BET = 1000
+        SYMBOLS = ["🍒", "🍋", "💎", "7️⃣", "🔔", "🎰", "⭐"]
+        PAYOUTS = {
+            "🍒": 2,
+            "🍋": 3,
+            "💎": 10,
+            "7️⃣": 7,
+            "🔔": 5,
+            "🎰": 15,
+            "⭐": 4
+        }
+        JACKPOT_MULTIPLIER = 100
 
-# Blackjack settings
-BLACKJACK_MIN_BET = 25
-BLACKJACK_MAX_BET = 1000
-BLACKJACK_TIMEOUT = 30  # Seconds to make a decision
-BLACKJACK_BLACKJACK_PAYOUT = 1.5  # Blackjack pays 3:2
-BLACKJACK_WIN_PAYOUT = 1  # Normal win pays 1:1
+    class Roulette:
+        MIN_BET = 10
+        MAX_BET = 1000
+        PAYOUTS = {
+            "number": 35,
+            "red": 1,
+            "black": 1,
+            "even": 1,
+            "odd": 1,
+            "low": 1,
+            "high": 1,
+            "dozen": 2,
+            "column": 2
+        }
 
-# Point system
-DEFAULT_POINTS = 1000  # Starting points for new users
-DEFAULT_MULTIPLIER = 1.0
+    class Blackjack:
+        MIN_BET = 25
+        MAX_BET = 1000
+        BLACKJACK_PAYOUT = 1.5
+        NORMAL_PAYOUT = 1.0
+        DECK_COUNT = 6
 
-# Daily bonus
-DAILY_MIN = 100
-DAILY_MAX = 500
+# Error Messages
+class ErrorMessages:
+    INVALID_BET = "Please enter a valid bet amount between {min} and {max}!"
+    INSUFFICIENT_POINTS = "You don't have enough points!"
+    GAME_IN_PROGRESS = "You already have a game in progress!"
+    COOLDOWN_ACTIVE = "Please wait before using this command again"
+    INVALID_TOKEN = "Bot token is not configured. Please set DISCORD_TOKEN in .env file"
+    PERMISSION_ERROR = "You don't have permission to use this command"
