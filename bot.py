@@ -13,6 +13,10 @@ import config
 from games.number_guess import NumberGuess
 from games.trivia import Trivia
 from games.coinflip import CoinFlip
+from games.slots import SlotMachine
+from games.roulette import Roulette
+from games.blackjack import BlackjackGame
+from games.daily import DailyBonus
 from utils.point_system import PointSystem
 
 # Configure logging
@@ -36,6 +40,10 @@ point_system = PointSystem()
 number_guess = NumberGuess(bot, point_system)
 trivia = Trivia(bot, point_system)
 coinflip = CoinFlip(bot, point_system)
+slots = SlotMachine(bot, point_system)
+roulette = Roulette(bot, point_system)
+blackjack = BlackjackGame(bot, point_system)
+daily_bonus = DailyBonus(bot, point_system)
 
 @bot.event
 async def on_ready():
@@ -44,7 +52,7 @@ async def on_ready():
     logger.info(f'Connected to {len(bot.guilds)} guilds')
     
     # Set bot status
-    activity = discord.Game(name=f"{config.PREFIX}help | Games & Points")
+    activity = discord.Game(name=f"{config.PREFIX}help | Casino Games")
     await bot.change_presence(activity=activity)
     
     logger.info("Bot is ready!")
@@ -67,34 +75,32 @@ async def on_command_error(ctx, error):
 async def help_command(ctx):
     """Display help information"""
     embed = discord.Embed(
-        title="🎮 Game Bot Help",
-        description="A bot with various games and a point system!",
+        title="🎰 Casino Bot Help",
+        description="A bot with various casino games and a point system!",
         color=discord.Color.blue()
     )
     
     # Add command sections
     embed.add_field(
-        name="🔢 Number Guessing Game",
-        value=f"`{config.PREFIX}guess start` - Start a new guessing game\n"
-              f"`{config.PREFIX}guess [number]` - Make a guess",
+        name="💰 Casino Games",
+        value=f"`{config.PREFIX}slots [bet]` - Play the slot machine\n"
+              f"`{config.PREFIX}roulette [prediction] [bet]` - Play roulette\n"
+              f"`{config.PREFIX}blackjack [bet]` - Play blackjack\n"
+              f"`{config.PREFIX}coinflip [heads/tails] [bet]` - Flip a coin",
         inline=False
     )
     
     embed.add_field(
-        name="🧠 Trivia Game",
-        value=f"`{config.PREFIX}trivia` - Get a random trivia question",
+        name="🎮 Mini Games",
+        value=f"`{config.PREFIX}guess start` - Start a number guessing game\n"
+              f"`{config.PREFIX}trivia` - Get a random trivia question",
         inline=False
     )
     
     embed.add_field(
-        name="🪙 Coin Flip Game",
-        value=f"`{config.PREFIX}coinflip [heads/tails]` - Flip a coin and bet on the outcome",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="📊 Points & Stats",
-        value=f"`{config.PREFIX}points` - Check your points\n"
+        name="💵 Points & Bonuses",
+        value=f"`{config.PREFIX}daily` - Claim your daily bonus\n"
+              f"`{config.PREFIX}points` - Check your points\n"
               f"`{config.PREFIX}leaderboard` - View the top players",
         inline=False
     )
@@ -127,16 +133,82 @@ async def trivia_command(ctx):
     await trivia.start_game(ctx)
 
 # Coin flip game command
-@bot.command(name="coinflip", aliases=["coin", "flip"])
-async def coinflip_command(ctx, choice=None):
+@bot.command(name="coinflip", aliases=["coin", "flip", "cf"])
+async def coinflip_command(ctx, choice=None, bet=None):
     """Flip a coin with a bet on heads or tails"""
     if choice is None:
-        await ctx.send(f"⚠️ Please specify 'heads' or 'tails'! Example: `{config.PREFIX}coinflip heads`")
+        await ctx.send(f"⚠️ Please specify 'heads' or 'tails'! Example: `{config.PREFIX}coinflip heads 100`")
+        return
+    
+    if bet is None:
+        await ctx.send(f"⚠️ Please specify a bet amount! Example: `{config.PREFIX}coinflip heads 100`")
+        return
+        
+    await coinflip.flip_coin(ctx, choice)
+
+# Slots game command
+@bot.command(name="slots", aliases=["slot", "sl"])
+async def slots_command(ctx, bet=None):
+    """Play the slot machine"""
+    if bet is None:
+        await ctx.send(f"⚠️ Please specify a bet amount! Example: `{config.PREFIX}slots 100`")
+        return
+        
+    await slots.play(ctx, bet)
+
+# Roulette game command
+@bot.command(name="roulette", aliases=["rou", "r"])
+async def roulette_command(ctx, prediction=None, bet=None):
+    """Play roulette with a bet on a specific outcome"""
+    if prediction is None:
+        await ctx.send(f"⚠️ Please specify a prediction! Example: `{config.PREFIX}roulette red 100`")
+        return
+        
+    if bet is None:
+        await ctx.send(f"⚠️ Please specify a bet amount! Example: `{config.PREFIX}roulette red 100`")
+        return
+        
+    await roulette.play(ctx, prediction, bet)
+
+# Blackjack game commands
+@bot.command(name="blackjack", aliases=["bj"])
+async def blackjack_command(ctx, bet=None, mode="easy"):
+    """Start a blackjack game"""
+    if bet is None:
+        await ctx.send(f"⚠️ Please specify a bet amount! Example: `{config.PREFIX}blackjack 100`")
+        return
+        
+    # Handle mode parameter
+    if mode.lower() in ["h", "hard"]:
+        mode = "hard"
     else:
-        await coinflip.flip_coin(ctx, choice)
+        mode = "easy"
+        
+    await blackjack.start_game(ctx, bet, mode)
+
+@bot.command(name="hit")
+async def hit_command(ctx):
+    """Take another card in blackjack"""
+    await blackjack.hit(ctx)
+
+@bot.command(name="stand")
+async def stand_command(ctx):
+    """Stand in blackjack"""
+    await blackjack.stand(ctx)
+
+@bot.command(name="double", aliases=["double_down"])
+async def double_command(ctx):
+    """Double down in blackjack"""
+    await blackjack.double_down(ctx)
+
+# Daily bonus command
+@bot.command(name="daily")
+async def daily_command(ctx):
+    """Claim daily bonus points"""
+    await daily_bonus.claim(ctx)
 
 # Points command
-@bot.command(name="points", aliases=["score"])
+@bot.command(name="points", aliases=["score", "balance", "bal"])
 async def points_command(ctx, member: discord.Member = None):
     """Check a user's points"""
     if member is None:
@@ -157,28 +229,39 @@ async def points_command(ctx, member: discord.Member = None):
     coinflip_streak = point_system.get_streak(user_id, username, "coinflip")
     coinflip_multiplier = point_system.get_multiplier(user_id, username, "coinflip")
     
+    blackjack_streak = point_system.get_streak(user_id, username, "blackjack")
+    roulette_streak = point_system.get_streak(user_id, username, "roulette")
+    slots_streak = point_system.get_streak(user_id, username, "slots")
+    
     embed = discord.Embed(
-        title=f"📊 Points for {member.name}",
+        title=f"💰 Balance for {member.name}",
         description=f"**Total Points:** {points}",
         color=discord.Color.gold()
     )
     
     embed.add_field(
-        name="🔢 Number Guessing Stats",
-        value=f"Streak: {guess_streak} wins\nMultiplier: {guess_multiplier:.2f}x",
+        name="🎰 Casino Stats",
+        value=f"Blackjack Streak: {blackjack_streak} wins\n"
+              f"Roulette Streak: {roulette_streak} wins\n"
+              f"Slots Streak: {slots_streak} wins",
         inline=True
     )
     
     embed.add_field(
-        name="🧠 Trivia Stats",
-        value=f"Streak: {trivia_streak} correct\nMultiplier: {trivia_multiplier:.2f}x",
+        name="🎮 Mini Game Stats",
+        value=f"Guess Streak: {guess_streak} wins (x{guess_multiplier:.2f})\n"
+              f"Trivia Streak: {trivia_streak} wins (x{trivia_multiplier:.2f})\n"
+              f"Coinflip Streak: {coinflip_streak} wins (x{coinflip_multiplier:.2f})",
         inline=True
     )
     
+    # Add tips on how to earn more
     embed.add_field(
-        name="🪙 Coin Flip Stats",
-        value=f"Streak: {coinflip_streak} wins\nMultiplier: {coinflip_multiplier:.2f}x",
-        inline=True
+        name="💡 Tips",
+        value=f"• Use `{config.PREFIX}daily` to get free points every day\n"
+              f"• Try your luck with `{config.PREFIX}slots` for big wins\n"
+              f"• Play `{config.PREFIX}blackjack` to test your skills",
+        inline=False
     )
     
     await ctx.send(embed=embed)
@@ -198,7 +281,7 @@ async def leaderboard_command(ctx, limit: int = 10):
         return await ctx.send("No players on the leaderboard yet! Start playing games to earn points.")
     
     embed = discord.Embed(
-        title="🏆 Points Leaderboard",
+        title="🏆 Casino Leaderboard",
         description="Top players ranked by points",
         color=discord.Color.gold()
     )
