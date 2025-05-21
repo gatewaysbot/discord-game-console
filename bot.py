@@ -10,14 +10,14 @@ import asyncio
 
 # Import config and game modules
 import config
-from games.number_guess import NumberGuess
+from games.numberguess import NumberGuess
 from games.trivia import Trivia
 from games.coinflip import CoinFlip
 from games.slots import SlotMachine
 from games.roulette import Roulette
 from games.blackjack import BlackjackGame
 from games.daily import DailyBonus
-from utils.point_system import PointSystem
+from utils.pointsystem import PointSystem
 
 # Configure logging
 logging.basicConfig(

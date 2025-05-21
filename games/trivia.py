@@ -6,7 +6,7 @@ import asyncio
 import discord
 from discord.ext import commands
 import config
-from utils.point_system import PointSystem
+from utils.pointsystem import PointSystem
 
 # Sample trivia questions - in a real implementation, you'd use an API or larger question set
 TRIVIA_QUESTIONS = [

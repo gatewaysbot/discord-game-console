@@ -6,7 +6,7 @@ import asyncio
 import discord
 from discord.ext import commands
 import config
-from utils.point_system import PointSystem
+from utils.pointsystem import PointSystem
 
 class SlotMachine:
     def __init__(self, bot, point_system: PointSystem):
